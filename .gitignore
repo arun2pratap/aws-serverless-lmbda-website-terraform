@@ -9,3 +9,4 @@ tmp
 *.iml
 local.auto.tfvars
 output/*
+/aws/chat-app/lambda_function.zip

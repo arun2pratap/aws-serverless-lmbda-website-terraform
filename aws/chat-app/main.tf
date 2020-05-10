@@ -1,3 +1,5 @@
+# TODO break it into modules.
+
 provider "aws" {
   region = var.region
 }
@@ -59,7 +61,7 @@ output "web_app_resources_uploaded" {
 
 # --- end setting up S3 bucket resources. -------
 
-# --- start create policy/role for lambda -------
+# --- start lamdba policy/role for  -------
 resource "aws_iam_policy" "s3_policy" {
   name        = "lets-chat-s3-access"
   description = "lets-chat-s3-access"
@@ -107,4 +109,19 @@ resource "aws_iam_role_policy_attachment" "lambda_attach_policy_s3" {
 resource "aws_iam_role_policy_attachment" "lambda_attach_policy_basicExecutionRole" {
   role = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "archive_file" "lambda_zip" {
+  type          = "zip"
+  source_file   = "lambda/index.js"
+  output_path   = "lambda_function.zip"
+}
+
+resource "aws_lambda_function" "lambda_read_s3" {
+  function_name = "lets-chat-API"
+  filename = "lambda_function.zip"
+  handler = "index.handler"
+  role = aws_iam_role.lambda_role.arn
+  runtime = "nodejs12.x"
+  source_code_hash = filebase64sha256("lambda/index.js")
 }

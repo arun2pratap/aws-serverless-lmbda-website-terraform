@@ -12,6 +12,6 @@
 * Creating S3 policy for attaching to lambda role.
 * Create role for lambda.
 * Attach required policy for lambda role.
-
+* Create lambda function - define a basic javascript lambda function using nodejs to read saved conversation from S3 bucket.
     
   
