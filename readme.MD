@@ -7,5 +7,11 @@
 * Uploading static content as S3 bucket object's.    
 * Using fileset to upload multiple files recursively.
 
+#### STEP 2 - Creating lambda function
+
+* Creating S3 policy for attaching to lambda role.
+* Create role for lambda.
+* Attach required policy for lambda role.
+
     
   
