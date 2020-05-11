@@ -182,7 +182,7 @@ resource "aws_api_gateway_rest_api" "api" {
   }
 }
 resource "aws_api_gateway_resource" "resource" {
-  path_part   = "{proxy+}"
+  path_part   = "{proxy+}" # To define it's a proxy resource
   parent_id = aws_api_gateway_rest_api.api.root_resource_id
   rest_api_id = aws_api_gateway_rest_api.api.id
 }
@@ -277,11 +277,9 @@ resource "aws_lambda_permission" "apigw_lambda" {
 }
 
 # dploy lambda funciton
-
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   stage_name    = "Dev"
   depends_on    = ["aws_api_gateway_integration.integration"]
 }
-
 #

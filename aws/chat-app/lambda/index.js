@@ -18,9 +18,7 @@ exports.handler = function (event, context, callback) {
             }
         });
     };
-    console.log('-------');
-    console.log(event);
-    console.log('-------');
+
     var path = event.pathParameters.proxy;
 
     if (path === 'conversations') {
