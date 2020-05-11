@@ -12,6 +12,12 @@
 * Creating S3 policy for attaching to lambda role.
 * Create role for lambda.
 * Attach required policy for lambda role.
-* Create lambda function - define a basic javascript lambda function using nodejs to read saved conversation from S3 bucket.
+* Create lambda function - define a basic javascript lambda function using nodejs to read saved conversation from S3 bucket. - Do test it if it's working replace the bucket name with your own bucket in index.js.
     
-  
+#### STEP 3 - Creating Amazon API Gateway  for lambda that we created.
+
+* Creating API gateway rest api "aws_api_gateway_rest_api"
+* Creating aws_api_gateway_resource
+* Creating aws_api_gateway_method
+* Creating aws_api_gateway_integration
+* Creating aws_lambda_permission

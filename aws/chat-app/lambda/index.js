@@ -3,7 +3,7 @@
 var AWS = require('aws-sdk');
 
 var S3 = new AWS.S3();
-
+// change to bucket-name you have created.
 var bucket = 'lets-chat-neo';
 
 exports.handler = function (event, context, callback) {
