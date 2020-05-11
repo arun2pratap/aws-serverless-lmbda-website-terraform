@@ -46,9 +46,9 @@ resource "aws_s3_bucket_object" "error_html" {
   source = "error.html"
 }
 
-resource "aws_s3_bucket_object" "upload_web_app" {
+resource "aws_s3_bucket_object" "upload_web_app_html" {
   bucket = aws_s3_bucket.chat_bucket.bucket
-  for_each = fileset("${path.module}/web-app", "**")
+  for_each = fileset("${path.module}/web-app", "**.html")
   key = each.value
   source = "${path.module}/web-app/${each.value}"
   # tracks the versoning identify any changes in file's for upload
@@ -56,9 +56,47 @@ resource "aws_s3_bucket_object" "upload_web_app" {
   content_type = "text/html"
 }
 
-output "web_app_resources_uploaded" {
-  value = fileset("${path.module}/web-app", "**")
+resource "aws_s3_bucket_object" "upload_web_app_css" {
+  bucket = aws_s3_bucket.chat_bucket.bucket
+  for_each = fileset("${path.module}/web-app", "*/*.css")
+  key = each.value
+  source = "${path.module}/web-app/${each.value}"
+  # tracks the versoning identify any changes in file's for upload
+  etag = filemd5("${path.module}/web-app/${each.value}")
+  content_type = "text/css"
 }
+
+resource "aws_s3_bucket_object" "upload_web_app_js" {
+  bucket = aws_s3_bucket.chat_bucket.bucket
+  for_each = fileset("${path.module}/web-app", "*/*.js")
+  key = each.value
+  source = "${path.module}/web-app/${each.value}"
+  # tracks the versoning identify any changes in file's for upload
+  etag = filemd5("${path.module}/web-app/${each.value}")
+  content_type = "application/javascript"
+}
+
+resource "aws_s3_bucket_object" "upload_web_app_json" {
+  bucket = aws_s3_bucket.chat_bucket.bucket
+  for_each = fileset("${path.module}/web-app", "**/*.json")
+  key = each.value
+  source = "${path.module}/web-app/${each.value}"
+  # tracks the versoning identify any changes in file's for upload
+  etag = filemd5("${path.module}/web-app/${each.value}")
+  content_type = "application/json"
+}
+
+
+resource "aws_s3_bucket_object" "upload_web_app_fonts" {
+  bucket = aws_s3_bucket.chat_bucket.bucket
+  for_each = fileset("${path.module}/web-app", "fonts/*")
+  key = each.value
+  source = "${path.module}/web-app/${each.value}"
+  # tracks the versoning identify any changes in file's for upload
+  etag = filemd5("${path.module}/web-app/${each.value}")
+  content_type = "image/svg+xml"
+}
+
 
 # --- end setting up S3 bucket resources. -------
 
@@ -140,19 +178,19 @@ resource "aws_api_gateway_rest_api" "api" {
   # Valid values: EDGE, REGIONAL or PRIVATE
   endpoint_configuration {
     types = [
-      "EDGE"]
+      "REGIONAL"]
   }
 }
 resource "aws_api_gateway_resource" "resource" {
-  path_part = "resource"
+  path_part   = "{proxy+}"
   parent_id = aws_api_gateway_rest_api.api.root_resource_id
   rest_api_id = aws_api_gateway_rest_api.api.id
 }
 # --- Mock Integration for CORS
 
 resource "aws_api_gateway_method" "options_method" {
-  rest_api_id = "${aws_api_gateway_rest_api.api.id}"
-  resource_id = "${aws_api_gateway_resource.resource.id}"
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_resource.resource.id
   http_method = "OPTIONS"
   authorization = "NONE"
 }
@@ -209,20 +247,10 @@ resource "aws_api_gateway_method" "method" {
   resource_id = aws_api_gateway_resource.resource.id
   http_method = "ANY"
   authorization = "NONE"
-}
-
-resource "aws_api_gateway_method_response" "cors_method_response_200" {
-  rest_api_id = aws_api_gateway_rest_api.api.id
-  resource_id = aws_api_gateway_resource.resource.id
-  http_method = aws_api_gateway_method.method.http_method
-  status_code = "200"
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+  request_parameters = {
+    "method.request.path.proxy" = true
   }
-  depends_on = [
-    "aws_api_gateway_method.method"]
 }
-
 
 resource "aws_api_gateway_integration" "integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -230,6 +258,9 @@ resource "aws_api_gateway_integration" "integration" {
   http_method = aws_api_gateway_method.method.http_method
   # ANY won't work for integration_http_method
   integration_http_method = "POST"
+  request_templates = {
+    "application/json": "{\"statusCode\": 200}"
+  }
   type = "AWS_PROXY"
   # Lambda proxy integration
   uri = aws_lambda_function.lambda_read_s3.invoke_arn

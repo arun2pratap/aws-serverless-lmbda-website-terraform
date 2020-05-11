@@ -3,9 +3,10 @@ var ChatApp = window.ChatApp || {};
 (function scopeWrapper($) {
 
     var currentUsername = 'Student';
+    var apiEndpoint = ChatApp.apiEndpoint;
 
     ChatApp.populateChats = function () {
-        $.get('data/conversations.json').done(function (data) {
+        $.get(apiEndpoint + '/conversations').done(function (data) {
             data.forEach(function (convo) {
                 var otherUsers = [];
                 convo.participants.forEach(function (user) {
@@ -21,7 +22,7 @@ var ChatApp = window.ChatApp || {};
     };
 
     ChatApp.loadChat = function () {
-        $.get('data/conversations/' + location.hash.substring(1) + '.json').done(function (result) {
+        $.get(apiEndpoint + '/conversations/' + location.hash.substring(1)).done(function (result) {
             result.messages.forEach(function (message) {
                 var panel = $('<div class="panel">');
                 if (message.sender === currentUsername) {

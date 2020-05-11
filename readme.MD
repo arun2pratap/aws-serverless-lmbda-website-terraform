@@ -1,5 +1,9 @@
 # AWS Building Serverless Chat Web app.
 
+### NOTE
+ * replace var bucket = 'lets-chat-neo'
+ * replace /js/config.js with API Gateway api address - ChatApp.apiEndpoint = 'https://wh4ts4x4sf.execute-api.us-east-1.amazonaws.com/Dev'; 
+
 #### STEP 1 - Creating S3 bucket resource.
 
 * Creating S3 bucket resource.
@@ -22,4 +26,7 @@
 * Creating aws_api_gateway_integration
 * Creating aws_lambda_permission
 * The difficult part making API CORS enable.
+    that was little difficult for me to implement, setting proxy , producers, consumers, cors enable.
+* LAMBDA proxy enabled
 * Deploying the API
+* updated lambda function to read from "pathParameter" i.e event.pathParameters.proxy
