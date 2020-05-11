@@ -21,3 +21,5 @@
 * Creating aws_api_gateway_method
 * Creating aws_api_gateway_integration
 * Creating aws_lambda_permission
+* The difficult part making API CORS enable.
+* Deploying the API
