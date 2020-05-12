@@ -30,3 +30,9 @@
 * LAMBDA proxy enabled
 * Deploying the API
 * updated lambda function to read from "pathParameter" i.e event.pathParameters.proxy
+
+#### STEP 4 - Routing lambda call from S3 to DynamoDB 
+* Creating DynamoDB tables.
+* Generate some sample data to play with.
+* Give access to lambda role to communicate with DynamoDB.
+* Necessary changes to .js and .html file to read/write conversations from DynamoDB.

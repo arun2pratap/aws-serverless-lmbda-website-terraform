@@ -149,6 +149,32 @@ resource "aws_iam_role_policy_attachment" "lambda_attach_policy_basicExecutionRo
   role = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+# todo can create customized policy to access DynamoDB table access.
+/*
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:Query"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:<region>:<your account id>:table/Chat-Conversations",
+                "arn:aws:dynamodb:<region>:<your account id>:table/Chat-Messages",
+                "arn:aws:dynamodb:<region>:<your account id>:table/Chat-Conversations/index/Username-ConversationId-index"
+            ]
+        }
+    ]
+}
+*/
+
+resource "aws_iam_role_policy_attachment" "lambda_attach_policy_dynamoDB" {
+  role = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
 
 data "archive_file" "lambda_zip" {
   type = "zip"
@@ -168,7 +194,7 @@ resource "aws_lambda_function" "lambda_read_s3" {
 
 # --- end lamdba policy/role for  -------
 
-# --- start API gatewar ---------------
+# --- start API gateway ---------------
 
 # https://www.terraform.io/docs/providers/aws/r/api_gateway_integration.html
 
@@ -182,7 +208,8 @@ resource "aws_api_gateway_rest_api" "api" {
   }
 }
 resource "aws_api_gateway_resource" "resource" {
-  path_part   = "{proxy+}" # To define it's a proxy resource
+  path_part = "{proxy+}"
+  # To define it's a proxy resource
   parent_id = aws_api_gateway_rest_api.api.root_resource_id
   rest_api_id = aws_api_gateway_rest_api.api.id
 }
@@ -278,8 +305,120 @@ resource "aws_lambda_permission" "apigw_lambda" {
 
 # dploy lambda funciton
 resource "aws_api_gateway_deployment" "deployment" {
-  rest_api_id   = aws_api_gateway_rest_api.api.id
-  stage_name    = "Dev"
-  depends_on    = ["aws_api_gateway_integration.integration"]
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  stage_name = "Dev"
+  depends_on = [
+    "aws_api_gateway_integration.integration"]
 }
-#
+## --- end API gateway ---------------
+
+# ------ start DynamoDB ------------
+
+resource "aws_dynamodb_table" "chat-conv" {
+  name = "Chat-Conversations"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key = "ConversationId"
+  range_key = "Username"
+
+  attribute {
+    name = "ConversationId"
+    type = "S"
+  }
+  attribute {
+    name = "Username"
+    type = "S"
+  }
+  global_secondary_index {
+    name = "Username-ConversationId-index"
+    projection_type = "ALL"
+    hash_key = "Username"
+    range_key = "ConversationId"
+    write_capacity = 1
+    read_capacity = 1
+  }
+}
+
+resource "aws_dynamodb_table" "chat-messages" {
+  name = "Chat-Messages"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key = "ConversationId"
+  range_key = "Timestamp"
+
+  attribute {
+    name = "ConversationId"
+    type = "S"
+  }
+  attribute {
+    name = "Timestamp"
+    type = "N"
+  }
+}
+# add some sample data
+
+resource "aws_dynamodb_table_item" "chat-messages_01" {
+  table_name = aws_dynamodb_table.chat-messages.name
+  hash_key = aws_dynamodb_table.chat-messages.hash_key
+  range_key = aws_dynamodb_table.chat-messages.range_key
+
+  item = <<ITEM
+{
+  "${aws_dynamodb_table.chat-messages.hash_key}": {"S": "1"},"${aws_dynamodb_table.chat-messages.range_key}": {"N": "1589307976345"},
+  "Sender": {"S": "arun"},
+  "Message": {"S": "Hello World! again"}
+}
+ITEM
+}
+
+resource "aws_dynamodb_table_item" "chat-messages_02" {
+  table_name = aws_dynamodb_table.chat-messages.name
+  hash_key = aws_dynamodb_table.chat-messages.hash_key
+  range_key = aws_dynamodb_table.chat-messages.range_key
+
+  item = <<ITEM
+{
+  "${aws_dynamodb_table.chat-messages.hash_key}": {"S": "2"},"${aws_dynamodb_table.chat-messages.range_key}": {"N": "1589307996345"},
+  "Sender": {"S": "neo"},
+  "Message": {"S": "Its beautiful world"}
+}
+ITEM
+}
+
+
+resource "aws_dynamodb_table_item" "chat-conv_01" {
+  table_name = aws_dynamodb_table.chat-conv.name
+  hash_key = aws_dynamodb_table.chat-conv.hash_key
+  range_key = aws_dynamodb_table.chat-conv.range_key
+
+  item = <<ITEM
+{
+"${aws_dynamodb_table.chat-conv.hash_key}": {"S": "1"},"${aws_dynamodb_table.chat-conv.range_key}": {"S": "arun"}
+}
+ITEM
+}
+
+resource "aws_dynamodb_table_item" "chat-conv_01_01" {
+  table_name = aws_dynamodb_table.chat-conv.name
+  hash_key = aws_dynamodb_table.chat-conv.hash_key
+  range_key = aws_dynamodb_table.chat-conv.range_key
+
+  item = <<ITEM
+{
+"${aws_dynamodb_table.chat-conv.hash_key}": {"S": "1"},"${aws_dynamodb_table.chat-conv.range_key}": {"S": "suryansh"}
+}
+ITEM
+}
+
+resource "aws_dynamodb_table_item" "chat-conv_02" {
+  table_name = aws_dynamodb_table.chat-conv.name
+  hash_key = aws_dynamodb_table.chat-conv.hash_key
+  range_key = aws_dynamodb_table.chat-conv.range_key
+
+  item = <<ITEM
+{
+  "${aws_dynamodb_table.chat-conv.hash_key}": {"S": "2"},"${aws_dynamodb_table.chat-conv.range_key}": {"S": "neo"}
+}
+ITEM
+}
+# ------ end DynamoDB ------------
